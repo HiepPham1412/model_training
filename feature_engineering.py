@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from config import nans, outliers_bound
+from .config import nans, outliers_bound
 
 
 
