@@ -8,6 +8,15 @@ from .config import nans, outliers_bound
 
 
 
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
+from datetime import datetime
+import pandas as pd
+import numpy as np
+from config import nans, outliers_bound
+
+
 class NATransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self):
@@ -108,8 +117,8 @@ class CatVarTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, drop=True):
         
         self.cat_cols = ['home_ownership', 'verification_status', 
-                         'purpose',  'application_type', 'grade']
-        self.to_be_ignore = ['emp_title', 'sub_grade', 'title', 'zip_code', 'addr_state']
+                         'purpose',  'application_type', 'grade', 'addr_state']
+        self.to_be_ignore = ['emp_title', 'sub_grade', 'title', 'zip_code']
         self.drop = drop
         self.unique_cat = {}
         self.ohe = OneHotEncoder(drop='first', handle_unknown='error')
@@ -155,8 +164,9 @@ class CatVarTransformer(BaseEstimator, TransformerMixin):
 
 class ContVarTransformer(BaseEstimator, TransformerMixin):
     
-    def __init__(self):
-        pass
+    def __init__(self, log_transform=False, polynomial_term=False):
+        self.log_transform = log_transform
+        self.polynomial_term = polynomial_term
     
     def fit(self, df):
         
@@ -168,7 +178,12 @@ class ContVarTransformer(BaseEstimator, TransformerMixin):
         df = self._add_year_since_earliest_cred_line(df)
         df = self._add_pmt_to_income(df)
         df = self._add_income_to_cred_lim(df)
-        df = self._log_transform(df)
+        
+        if self.log_transform:
+            df = self._log_transform(df)
+        
+        if self.polynomial_term:
+            df = self._add_poly_term(df)
         
         return df
     
@@ -219,6 +234,18 @@ class ContVarTransformer(BaseEstimator, TransformerMixin):
             else:
                 pass
 
+        return df
+    
+    def _add_poly_term(self, df):
+        
+        df_cont = df.select_dtypes(include=['float64', 'float32', 'int64', 'int32'])
+        for col in df_cont.columns:
+            df_cont.loc[:, col + '_poly2'] = np.square(df[col])
+            
+        df_others = df.select_dtypes(exclude=['float64', 'float32', 'int64', 'int32'])
+        
+        df = df_cont.merge(df_others, how='left', left_index=True, right_index=True)
+        
         return df
     
 
