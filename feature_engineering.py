@@ -7,16 +7,6 @@ import numpy as np
 from .config import nans, outliers_bound
 
 
-
-from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
-from datetime import datetime
-import pandas as pd
-import numpy as np
-from config import nans, outliers_bound
-
-
 class NATransformer(BaseEstimator, TransformerMixin):
     
     def __init__(self):
