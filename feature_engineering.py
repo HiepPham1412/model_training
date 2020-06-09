@@ -104,51 +104,54 @@ class OutlierTransformer(BaseEstimator, TransformerMixin):
 
 class CatVarTransformer(BaseEstimator, TransformerMixin):
     
-    def __init__(self, drop=True):
+    def __init__(self, drop=True, dummy=True):
         
         self.cat_cols = ['home_ownership', 'verification_status', 
                          'purpose',  'application_type', 'grade', 'addr_state']
         self.to_be_ignore = ['emp_title', 'sub_grade', 'title', 'zip_code']
         self.drop = drop
         self.unique_cat = {}
+        self.dummy = dummy
         self.ohe = OneHotEncoder(drop='first', handle_unknown='error')
         
     
     def fit(self, df):
         
-        self.ohe.fit(df[self.cat_cols])
-        
-        for col in self.cat_cols:
-            self.unique_cat[col] = df[col].unique().tolist()
+        if self.dummy:
+            self.ohe.fit(df[self.cat_cols])
+
+            for col in self.cat_cols:
+                self.unique_cat[col] = df[col].unique().tolist()
         
         return self
     
     def transform(self, df):
         
-        # remove record containing new category
-        for col in self.cat_cols:
-            
-            new_cat_df = df[~ df[col].isin(self.unique_cat[col])]
-            new_cat = new_cat_df[col].unique().tolist()
-            
-            df = df[df[col].isin(self.unique_cat[col])]
-            
-            if len(new_cat) > 0:
-                print(f'col new category {new_cat} appear in {col} col, {new_cat_df.shape[0]} records removed')
-        
-        # transform 
-        bin_matrix = self.ohe.transform(df[self.cat_cols]).toarray()        
-        df_dummy = pd.DataFrame(bin_matrix, 
-                                columns=self.ohe.get_feature_names(self.cat_cols), 
-                                index=df.index)
-        
-        # append df by new data
-        df = pd.concat([df, df_dummy], axis=1)
-        
+        if self.dummy:
+            # remove record containing new category
+            for col in self.cat_cols:
+
+                new_cat_df = df[~ df[col].isin(self.unique_cat[col])]
+                new_cat = new_cat_df[col].unique().tolist()
+
+                df = df[df[col].isin(self.unique_cat[col])]
+
+                if len(new_cat) > 0:
+                    print(f'col new category {new_cat} appear in {col} col, {new_cat_df.shape[0]} records removed')
+
+            # transform 
+            bin_matrix = self.ohe.transform(df[self.cat_cols]).toarray()        
+            df_dummy = pd.DataFrame(bin_matrix, 
+                                    columns=self.ohe.get_feature_names(self.cat_cols), 
+                                    index=df.index)
+
+            # append df by new data
+            df = pd.concat([df, df_dummy], axis=1)            
+            if self.drop:
+                df = df.drop(columns=self.cat_cols)
+                
         df = df.drop(columns=self.to_be_ignore)
-        if self.drop:
-            df = df.drop(columns=self.cat_cols)
-        
+
         return df
     
 
