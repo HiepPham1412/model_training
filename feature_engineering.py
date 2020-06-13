@@ -108,7 +108,7 @@ class CatVarTransformer(BaseEstimator, TransformerMixin):
         
         self.cat_cols = ['home_ownership', 'verification_status', 
                          'purpose',  'application_type', 'grade']
-        if to_be_ignore is None:
+        if to_be_ignored is None:
             self.to_be_ignored = ['emp_title', 'sub_grade', 'title', 'zip_code', 'addr_state']
         else:
             self.to_be_ignored = to_be_ignored
