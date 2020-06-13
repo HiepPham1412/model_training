@@ -104,11 +104,15 @@ class OutlierTransformer(BaseEstimator, TransformerMixin):
 
 class CatVarTransformer(BaseEstimator, TransformerMixin):
     
-    def __init__(self, drop=True, dummy=True):
+    def __init__(self, drop=True, dummy=True, to_be_ignored=None):
         
         self.cat_cols = ['home_ownership', 'verification_status', 
                          'purpose',  'application_type', 'grade', 'addr_state']
-        self.to_be_ignore = ['emp_title', 'sub_grade', 'title', 'zip_code']
+        if to_be_ignore is None:
+            self.to_be_ignored = ['emp_title', 'sub_grade', 'title', 'zip_code']
+        else:
+            self.to_be_ignored = to_be_ignored
+            
         self.drop = drop
         self.unique_cat = {}
         self.dummy = dummy
@@ -150,7 +154,7 @@ class CatVarTransformer(BaseEstimator, TransformerMixin):
             if self.drop:
                 df = df.drop(columns=self.cat_cols)
                 
-        df = df.drop(columns=self.to_be_ignore)
+        df = df.drop(columns=self.to_be_ignored)
 
         return df
     
